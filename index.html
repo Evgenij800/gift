@@ -118,6 +118,25 @@
       .collection{padding:33px 0 48px}.collection h2{font-size:clamp(37px,10vw,52px)}.collection-intro{font-size:13px;margin:14px auto 25px}.wishes{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wish{min-height:145px;padding:17px 15px}.wish-star{font-size:27px}.wish-name{margin-top:20px;font-size:18px}.wish-action{font-size:9px}.collection-bottom{flex-wrap:wrap;gap:8px 16px;line-height:1.6}
     }
     @media(max-width:360px){.brand{letter-spacing:.1em;font-size:8px}.hero{padding-top:27px}.hero .eyebrow{gap:7px;font-size:8px;letter-spacing:.13em}.hero .eyebrow:before,.hero .eyebrow:after{width:20px}.stage{margin-top:-8px}.wish{min-height:140px}.wish-name{font-size:16px}}
+    @media(max-width:700px){
+      .topbar{padding-top:10px;padding-bottom:0}
+      .hero{padding-top:clamp(12px,3svh,25px);padding-bottom:8px}
+      .hero .eyebrow{margin-bottom:9px}
+      .hero h1{font-size:clamp(39px,min(11vw,7svh),60px)}
+      .intro{margin:10px auto 12px;line-height:1.5}
+      .hint{margin-top:6px}
+      .stage{width:min(75vw,29svh,310px);margin:0 auto}
+      .collection{padding:clamp(12px,2svh,22px) 0 12px}
+      .collection .eyebrow{margin-bottom:7px}
+      .collection h2{font-size:clamp(33px,min(9vw,6svh),48px)}
+      .collection-intro{margin:9px auto 14px;line-height:1.45}
+      .wishes{gap:8px}
+      .wish{min-height:clamp(98px,14svh,120px);padding:12px 14px}
+      .wish-star{font-size:23px}
+      .wish-name{margin-top:10px;font-size:17px}
+      .wish-action{margin-top:5px}
+      .collection-bottom{margin-top:14px;gap:5px 12px}
+    }
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
   </style>
 </head>
@@ -128,7 +147,7 @@
   <div class="page">
     <header class="topbar">
       <div class="brand"><span class="brand-symbol" aria-hidden="true">✧</span><span>Вселенная для тебя</span></div>
-      <button class="sound" id="sound" type="button" aria-pressed="false"><span class="sound-mark" aria-hidden="true">♪</span><span id="sound-label">Звук: выкл.</span></button>
+      <button class="sound" id="sound" type="button" aria-pressed="true"><span class="sound-mark" aria-hidden="true">♪</span><span id="sound-label">Выключить звук</span></button>
     </header>
 
     <main>
@@ -197,7 +216,7 @@
           <button class="wish" type="button" data-wish="4"><span class="wish-top"><span class="wish-star" aria-hidden="true">✦</span><span class="wish-number">05</span></span><span class="wish-name">Тебе и малышу</span><span class="wish-action">открыть послание ↗</span></button>
           <button class="wish" type="button" data-wish="5"><span class="wish-top"><span class="wish-star" aria-hidden="true">✧</span><span class="wish-number">06</span></span><span class="wish-name">От всего сердца</span><span class="wish-action">открыть послание ↗</span></button>
         </div>
-        <div class="collection-bottom"><span>Для Кристины · с теплом</span><span aria-hidden="true">✦</span><button class="restart" id="restart" type="button">Открыть ещё раз</button></div>
+        <div class="collection-bottom"><span>Для Кристины в день рождения от Жени</span><span aria-hidden="true">✦</span><button class="restart" id="restart" type="button">Открыть ещё раз</button></div>
       </section>
     </main>
   </div>
@@ -235,12 +254,21 @@
         { title:'От всего сердца', text:'Кристина, с твоими 24! Я очень ценю тебя и от всей души желаю тебе счастья. Пусть впереди будет много света, добрых встреч и всего того, от чего по-настоящему хорошо на сердце.' }
       ];
       let opening = false;
-      let soundEnabled = false;
+      let soundEnabled = true;
       let audio = null;
 
-      // Звук включается только по желанию и создаётся прямо в браузере.
+      // Браузер разрешает запуск звука после первого действия пользователя.
       function chime(kind = 'wish') {
-        if (!soundEnabled || !audio) return;
+        if (!soundEnabled) return;
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) throw new Error('Звук не поддерживается');
+          audio = audio || new AudioContextClass();
+          if (audio.state === 'suspended') audio.resume();
+        } catch (error) {
+          soundLabel.textContent = 'Звук недоступен';
+          return;
+        }
         const now = audio.currentTime;
         const notes = kind === 'open' ? [440, 554.37, 659.25, 880] : [659.25, 830.61, 987.77];
         notes.forEach((frequency, i) => {
@@ -265,7 +293,7 @@
             audio = audio || new AudioContextClass();
             await audio.resume();
             soundEnabled = true;
-            soundLabel.textContent = 'Звук: вкл.';
+            soundLabel.textContent = 'Выключить звук';
             soundButton.setAttribute('aria-pressed', 'true');
             chime();
           } catch (error) {
@@ -273,7 +301,7 @@
           }
         } else {
           soundEnabled = false;
-          soundLabel.textContent = 'Звук: выкл.';
+          soundLabel.textContent = 'Включить звук';
           soundButton.setAttribute('aria-pressed', 'false');
         }
       });
